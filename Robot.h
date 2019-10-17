@@ -1,86 +1,70 @@
 #ifndef ROBOT1_H
 #define ROBOT1_H
 
-#include <SFML/Graphics.hpp>
+#include"AlgoGen.h"
+#include"Capteurs.h"
+#include"Point.h"
+#include"BasicFunctions.h"
+#include"constantes.h"
+#include"RenderObject.h"
+#include"Terrain.h"
 
-#include "point.h"
-
-class robot
+class robot : public RenderObject
 {
-    public:
-        robot();
-        robot(double x, double y, double angle, sf::Color color);
-        virtual ~robot();
-        sf::RectangleShape draw();
-        sf::RectangleShape drawTarget();
-        sf::RectangleShape drawTest();
-        void update(sf::Time time);
-		void updateClavier(float vitD, float vitG);
-        void actualise_position(float rightSpeed, float leftSpeed);
-		void actualise_positionTarget(float rightSpeed, float leftSpeed);
-        void frottements(int time);
+private:
+	//Point m_pos; // position du robot
+	int id;
 
-        bool delay();
+	Point* m_target;	// position visee
+	float m_length;	// dimensions du rectangle représentant le robot
+	float m_width;
+	float m_leftSpeed; // vitesses des roues droite et gauche
+	float m_rightSpeed;
+	const float m_maxAcceleration;
+	const float m_maxDeceleration;
+	const float m_maxSpeed;
 
+	sf::RectangleShape m_shapeTest;
+	sf::RectangleShape m_shapeTarget;
 
-		//genetique
-        void startGen(double x, double y);
-		void endGen();
-        void actualisePositionTest(float rightSpeed, float leftSpeed, int i);
-        double evalueSol() const;
-        void swapSol(int sol1, int sol2);
-        int chercheMeilleure(int indiceDepart);
-        void genSol();
-        void crossOver(int ind1, int ind2, int a);
-        void mutate();
-        void brake(int ind);
-        void accel(int ind);
-        void turnRight(int ind);
-        void turnLeft(int ind);
-        void retarget();
+	float m_delay;
+	const team m_team;
 
-        double getX();
-        double getY();
+	const Terrain* m_terrain;
 
-        void testCollisionTest();
-        void testUpCollisionTest();
-        void testBotCollisionTest();
-        void testLeftCollisionTest();
-        void testRightCollisionTest();
+	sf::Sprite m_sprite;
+	sf::Texture m_texture;
 
-        void testCollisionEn(int i);
+	Pathfinding* m_IAPthfinding;
+	std::vector <Capteurs*> capteurs;
+	std::vector<Point*> m_posOtherRobot;
 
-        void score(int indSol);
-        void distSolTest(int indSol);
-        int testDist();
-        bool reachTarget();
-        bool reachTargetTest(int i);
+	// Functions
+	void actualise_position(float rightSpeed, float leftSpeed);
+	void actualise_positionTarget(float rightSpeed, float leftSpeed);
+	void frottements(float dt);
 
-    protected:
+	void retarget();
+	bool reachTarget();
+	void setTarget(const Point target);
+	void deleteTarget();
 
-    private:
-        Point m_pos; // position du robot
-        Point m_target;	// position visee
-        int m_posEn[2][NB_TOURS_SIMULES]; // pos d'un robot ennemi
-        int m_length;	// dimensions du rectangle représentant le robot
-        int m_width;
-        double m_leftSpeed; // vitesses des roues droite et gauche
-        double m_rightSpeed;
-        double m_maxAcceleration;
-        sf::RectangleShape m_shape; // forme du robot pour le rendu graphique
-        sf::RectangleShape m_shapeTest;
-		sf::RectangleShape m_shapeTarget;
-        int m_delay;
+	bool delay();
 
-        //genetique
-        double m_sol[NB_SOL+1][NB_TOURS_SIMULES+1][2]; //[n° de la sol (nb_sol+1 pour stocker la sol testee)]
-                                                            //[avancee dans le temps(NB_TOURS_SIMULES+1 pour stocker le score)][droite, gauche]
-        bool m_collision; // =true si une collision a lieu lors de la simulation, faux sinon
-        int m_malus; // malus utilisé pour noter les solutions generees
-        int m_nbMutations; // utile pour des statistiques
+	void updatePosOtherRobots(const std::vector<Point>& posRobots);
 
-        Point m_posTest; // utilisée pour simuler l'avancee du robot virtuellement sur plusieurs tours
-        Point m_posDep; // position de depart a partir de laquelle on va rechercher la trajectoire optimale. Cette position doit rester fixe pendant toute la duree de la recherche
+public:
+	robot(int nbRobots, team team, sf::Vector2f taille, int idRobot, const Terrain* terrain, int id);
+	virtual ~robot();
+
+	void update(const float dt);
+	void updateClavier(float vitD, float vitG);
+	void play(float time_available, const std::vector<Point>& posRobots);
+	void render(sf::RenderTarget& target);
+
+	std::string posString() const;
+	std::string pathFindingString() const;
+	std::string speedString() const;
 };
 
 #endif // ROBOT1_H
